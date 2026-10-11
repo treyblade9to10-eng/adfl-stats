@@ -41,6 +41,7 @@
 
   A.props = {
     DEFS,
+    history(pid, key, beforeGame) { return history(pid, defOf(key), beforeGame); },
     lineFor(pid, key, beforeGame) {
       const def = defOf(key), p = S().players[pid];
       const h = history(pid, def, beforeGame).slice(-6);
@@ -80,7 +81,9 @@
       const ex = this.pickFor(prop.id);
       if (ex && ex.result) return;                 // already graded
       if (ex && ex.side === side && (line == null || line === ex.line)) { S().picks = S().picks.filter(p => p !== ex); A.store.save(); return; }
-      const rec = { id: prop.id, gameId: prop.gameId, season: A.store.game(prop.gameId).season, kind: prop.kind, pid: prop.pid || null, tid: prop.tid || null, key: prop.key, label: prop.label, line: line != null ? line : prop.line, side, result: null, actual: null, at: Date.now() };
+      const g = A.store.game(prop.gameId), ln = line != null ? line : prop.line;
+      const ch = A.odds ? A.odds.prop(Object.assign({}, prop, { line: ln }), g) : null;
+      const rec = { chance: ch ? ch[side] : null, id: prop.id, gameId: prop.gameId, season: A.store.game(prop.gameId).season, kind: prop.kind, pid: prop.pid || null, tid: prop.tid || null, key: prop.key, label: prop.label, line: line != null ? line : prop.line, side, result: null, actual: null, at: Date.now() };
       if (ex) Object.assign(ex, rec); else S().picks.push(rec);
       A.store.save();
     },
@@ -103,7 +106,9 @@
       gr.forEach(p => { const k = p.label.replace(/^.* points$/, 'Team points'); (by[k] = by[k] || { w: 0, l: 0 })[p.result === 'W' ? 'w' : 'l']++; });
       const sides = { over: { w: 0, l: 0 }, under: { w: 0, l: 0 } };
       gr.forEach(p => sides[p.side][p.result === 'W' ? 'w' : 'l']++);
-      return { n: gr.length, w, l: gr.length - w, cur, best, by, sides, recent: gr.slice(-10).reverse(), pending: S().picks.filter(p => !p.result) };
+      const withCh = gr.filter(p => p.chance != null);
+      const expected = withCh.reduce((s, p) => s + p.chance, 0);
+      return { expected, expN: withCh.length, expW: withCh.filter(p => p.result === 'W').length, n: gr.length, w, l: gr.length - w, cur, best, by, sides, recent: gr.slice(-10).reverse(), pending: S().picks.filter(p => !p.result) };
     },
   };
   A.onGameSaved(g => A.props.grade(g));

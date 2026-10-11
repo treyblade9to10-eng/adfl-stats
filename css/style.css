@@ -23,6 +23,7 @@ h1, h2, h3, h4 { font-family: var(--hd); text-transform: uppercase; margin: 0; }
 /* ---------- header + nav ---------- */
 #top { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #0a0d12; border-bottom: 1px solid var(--line); }
 .logo { font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 34px; line-height: 1; letter-spacing: .01em; color: var(--gold); }
+.logo { display: inline-flex; align-items: center; gap: 10px; } .logo svg { display: block; }
 .logo small { font-size: 14px; letter-spacing: .28em; color: var(--dim); margin-left: 10px; font-style: normal; font-weight: 800; }
 #nav { position: sticky; top: 0; z-index: 30; display: flex; overflow-x: auto; background: var(--panel); border-bottom: 3px solid var(--gold); scrollbar-width: none; }
 #nav::-webkit-scrollbar { display: none; }
@@ -76,6 +77,8 @@ h2.sec::before { content: ''; width: 18px; height: 5px; background: var(--gold);
 /* ---------- badges ---------- */
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 22px; padding: 0 6px; background: var(--c1); color: var(--c2); font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 13px; letter-spacing: .04em; clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); box-shadow: inset 0 -3px 0 var(--c2); vertical-align: middle; }
 .badge.lg { min-width: 54px; height: 32px; font-size: 18px; } .badge.xl { min-width: 84px; height: 54px; font-size: 30px; clip-path: polygon(9px 0, 100% 0, calc(100% - 9px) 100%, 0 100%); box-shadow: inset 0 -5px 0 var(--c2); }
+.tbadge { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; } .tbadge svg { display: block; flex: none; }
+.tbadge b { font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 13px; letter-spacing: .04em; color: var(--dim); }
 .tl { display: inline-flex; align-items: center; gap: 8px; } .pl { font-weight: 700; } .pl:hover { color: var(--gold); }
 .pos { font-family: var(--hd); font-weight: 800; color: var(--dim); font-size: 13px; letter-spacing: .06em; }
 .tagp { display: inline-block; font-family: var(--hd); font-weight: 800; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 1px 7px; background: var(--panel3); color: var(--gold); } .tagp.x { color: #ffb36b; } .tagp.rk { background: var(--gold); color: #111; padding: 0 5px; }
@@ -132,6 +135,14 @@ table.cmp td.num { text-align: center; font-weight: 700; }
 .awgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; } .award { background: var(--panel); border-top: 3px solid var(--panel3); padding: 12px; } .award.got { border-top-color: var(--gold); } .an { font-family: var(--hd); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); font-size: 14px; } .aw { font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 24px; margin: 6px 0; min-height: 30px; }
 .sugg { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 12px; } button.sg { text-align: left; text-transform: none; font-family: var(--bd); font-weight: 700; font-size: 15px; letter-spacing: 0; clip-path: none; margin: 0; padding: 8px 12px; background: var(--panel2); display: flex; gap: 8px; align-items: center; } button.sg:hover { background: var(--panel3); }
 
+/* ---------- odds ---------- */
+.oddsbar { display: flex; height: 38px; margin: 4px 0 10px; gap: 3px; }
+.oddsbar > div { display: flex; align-items: center; gap: 8px; padding: 0 10px; min-width: 64px; border-bottom: 4px solid; color: #fff; font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 22px; text-shadow: 1px 1px 0 #0008; }
+.oddsbar > div:last-child { justify-content: flex-end; }
+.proj { font-size: 15px; margin-bottom: 4px; } ul.why { margin: 6px 0; padding-left: 18px; color: var(--dim); font-size: 14px; } ul.why li { margin: 2px 0; }
+.upset { background: var(--red); color: #fff; font-family: var(--hd); font-style: italic; font-weight: 900; font-size: 20px; letter-spacing: .04em; padding: 8px 14px; margin: 8px 0 12px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+button.pb i { font-style: normal; opacity: .75; margin-left: 4px; font-weight: 600; }
+
 /* ---------- picks ---------- */
 .prop { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); } .prop.picked { background: #f6c31c10; }
 input.ln { width: 72px; text-align: center; } .pbtns { display: flex; } button.pb { margin: 0 2px; padding: 6px 14px; font-size: 14px; background: var(--panel2); } button.pb.on { background: var(--gold); color: #111; }
@@ -155,7 +166,8 @@ table.form input { width: 58px; text-align: right; padding: 5px 4px; } table.for
 @media (max-width: 760px) {
   h1 { font-size: 34px; } .thead h1 { font-size: 28px; } .cols2 { grid-template-columns: 1fr; } .stats4 { grid-template-columns: repeat(2, 1fr); }
   .gh { flex-wrap: wrap; } .gbig { font-size: 46px; } .gtn { font-size: 20px; } .gmid { order: -1; flex: 1 1 100%; } .mbig { font-size: 44px; } .mside { font-size: 18px; }
-  .logo small { display: none; } main { padding: 12px 10px 80px; } .badge.xl { min-width: 60px; height: 40px; font-size: 22px; } .thead { gap: 12px; padding: 12px; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; } .logo svg { display: block; }
+.logo small { display: none; } main { padding: 12px 10px 80px; } .badge.xl { min-width: 60px; height: 40px; font-size: 22px; } .thead { gap: 12px; padding: 12px; }
   .prop { grid-template-columns: 1fr auto; } .prop .pline { grid-column: 2; grid-row: 1; } .pbtns { grid-column: 1 / -1; }
   input.search { min-width: 0; width: 100%; }
   table.qt input { width: 44px; padding: 5px 2px; } table.qt .badge { display: none; } table.qt td:first-child { padding-left: 0; }

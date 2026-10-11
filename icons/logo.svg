@@ -1,0 +1,8 @@
+<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" class="alogo" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="ADFL">
+      <path d="M50 4 L92 15 L89 60 Q85 84 50 97 Q15 84 11 60 L8 15 Z" fill="#141a23" stroke="#f6c31c" stroke-width="5"/>
+      <g transform="rotate(-28 50 38)"><ellipse cx="50" cy="38" rx="25" ry="14" fill="#f6c31c"/>
+        <path d="M30 38 Q26 38 25 38 M70 38 Q74 38 75 38" stroke="#141a23" stroke-width="2"/>
+        <path d="M37 38 L63 38" stroke="#141a23" stroke-width="2.5"/><path d="M41 34 L41 42 M46 34 L46 42 M51 34 L51 42 M56 34 L56 42 M61 34 L61 42" stroke="#141a23" stroke-width="2"/></g>
+      <path d="M18 60 L84 60 L80 74 L14 74 Z" fill="#e8401c"/>
+      <text x="49" y="72.5" text-anchor="middle" font-family="'Barlow Condensed','Arial Narrow',Arial,sans-serif" font-weight="900" font-style="italic" font-size="17" fill="#fff" letter-spacing="1">ADFL</text>
+      <path d="M38 82 L62 82" stroke="#f6c31c" stroke-width="2"/></svg>

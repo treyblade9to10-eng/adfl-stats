@@ -15,6 +15,22 @@
     return st;
   }
 
+  // v1.1: Chick-fil-A left the league, Wingstop took its spot. Everything recorded under CFA moves to WNG.
+  function migrate(st) {
+    if (!JSON.stringify(st).includes('"CFA"') && !JSON.stringify(st).includes(':CFA:')) return;
+    const fix = v => v === 'CFA' ? 'WNG' : v;
+    Object.values(st.players).forEach(p => p.team = fix(p.team));
+    st.games.forEach(g => {
+      g.home = fix(g.home); g.away = fix(g.away);
+      if (g.box) Object.values(g.box).forEach(ln => ln.t = fix(ln.t));
+    });
+    st.picks.forEach(p => { p.tid = fix(p.tid); p.id = p.id.replace(':CFA:', ':WNG:'); });
+    st.awards.forEach(a => a.tid = fix(a.tid));
+    Object.values(st.drafts || {}).forEach(d => Object.values(d.box || {}).forEach(ln => ln.t = fix(ln.t)));
+    Object.values(st.drafts || {}).forEach(d => { if (d.rows) Object.keys(d.rows).forEach(k => { if (k.startsWith('CFA:')) { d.rows['WNG:' + k.slice(4)] = d.rows[k]; delete d.rows[k]; } }); });
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { }
+  }
+
   function addSeasonGames(season) {
     const sched = A.makeSchedule(season);
     sched.forEach((g, i) => S.games.push({
@@ -25,7 +41,7 @@
   A.store = {
     get state() { return S; },
     load() {
-      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); return S; } } catch (e) { console.warn('load failed', e); }
+      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(S); return S; } } catch (e) { console.warn('load failed', e); }
       fresh(); this.save(); return S;
     },
     save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Could not save (storage full?). Export a backup from Settings.'); } },

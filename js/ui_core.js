@@ -5,11 +5,15 @@
   const UI = A.ui = { season: null, views: {}, acts: {}, changes: {}, inputs: {} };
 
   // ---------- bits of html ----------
+  // Small badge = logo + abbreviation (for spots with no team name next to it). lg / xl = big logo only.
+  const LOGO_PX = { lg: 46, xl: 72 };
   UI.badge = (tid, size) => {
     const t = A.team(tid); if (!t) return '';
-    return `<span class="badge ${size || ''}" style="--c1:${t.c1};--c2:${t.c2}">${tid}</span>`;
+    if (size) return `<span class="tbadge ${size}" title="${esc(A.tName(tid))}">${A.logoSVG(tid, LOGO_PX[size] || 36)}</span>`;
+    return `<span class="tbadge" title="${esc(A.tName(tid))}">${A.logoSVG(tid, 22)}<b>${tid}</b></span>`;
   };
-  UI.tlink = (tid, mode) => `<a class="tl" href="#/team/${tid}">${UI.badge(tid)}<span>${esc(mode === 'nick' ? A.tNick(tid) : mode === 'city' ? A.tCity(tid) : A.tName(tid))}</span></a>`;
+  UI.logo = (tid, px) => `<span class="tbadge" title="${esc(A.tName(tid))}">${A.logoSVG(tid, px || 24)}</span>`;
+  UI.tlink = (tid, mode) => `<a class="tl" href="#/team/${tid}">${UI.logo(tid)}<span>${esc(mode === 'nick' ? A.tNick(tid) : mode === 'city' ? A.tCity(tid) : A.tName(tid))}</span></a>`;
   UI.plink = (pid, extra) => { const p = A.store.state.players[pid]; return p ? `<a class="pl" href="#/player/${pid}">${esc(p.name)}</a>${extra || ''}` : esc(pid); };
   UI.pos = p => `<span class="pos">${p.pos}</span>`;
   UI.glink = (g, text) => `<a href="#/game/${g.id}">${text}</a>`;
@@ -110,6 +114,7 @@
 
   UI.boot = function () {
     A.store.load();
+    const al = document.getElementById('appLogo'); if (al) al.innerHTML = A.appLogoSVG(44);
     UI.season = A.store.state.seasonNow;
     const nav = document.getElementById('nav');
     nav.innerHTML = UI.NAV.map(([id, l]) => `<a data-n="${id}" href="#/${id}">${l}</a>`).join('');

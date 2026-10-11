@@ -34,7 +34,7 @@
     ['MCD', "McDonald's", 'Mustangs', 'BUR', '#da291c', '#ffc72c'],
     ['CUL', "Culver's", 'Curds', 'BUR', '#0a3d7c', '#f2c230'],
     ['BKG', 'Burger King', 'Kings', 'BUR', '#ec6a1e', '#2a5db0'],
-    ['CFA', 'Chick-fil-A', 'Cows', 'CHK', '#e51636', '#f4f4f4'],
+    ['WNG', 'Wingstop', 'Wingmen', 'CHK', '#0d5b34', '#d9e021'],
     ['TCB', 'Taco Bell', 'Bandits', 'CHK', '#6d2a82', '#e8478b'],
     ['CHP', 'Chipotle', 'Peppers', 'CHK', '#a81612', '#9a7a52'],
   ];

@@ -13,6 +13,16 @@
       `<a class="more" href="#/matchup/${g.home}/${g.away}">Full rematch center</a>`, 'notes');
   };
 
+  // ---------- Win chance ----------
+  UI.oddsCard = function (g) {
+    const o = A.odds.game(g), H = A.team(g.home), Aw = A.team(g.away);
+    const pa = Math.round(o.pAway * 100), ph = 100 - pa;
+    return UI.card(g.played ? 'Pregame odds' : 'Win chance', `<div class="oddsbar"><div style="width:${pa}%;background:${Aw.c1};border-color:${Aw.c2}">${UI.logo(g.away, 22)}<b>${pa}%</b></div><div style="width:${ph}%;background:${H.c1};border-color:${H.c2}"><b>${ph}%</b>${UI.logo(g.home, 22)}</div></div>
+      ${g.played ? '' : `<div class="proj">Projected score: <b>${esc(A.tNick(g.away))} ${o.projAway}, ${esc(A.tNick(g.home))} ${o.projHome}</b></div>`}
+      <ul class="why">${o.factors.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+      <div class="note">${o.games ? `Based on ${o.games} earlier game${o.games > 1 ? 's' : ''} plus roster ratings.` : 'No games played yet, so this is just roster ratings and home field.'} It's a guess, not a sure thing.</div>`, 'odds');
+  };
+
   // ---------- Over/Under picks panel ----------
   UI.propsPanel = function (g) {
     const props = A.props.forGame(g);
@@ -23,16 +33,17 @@
       const lab = p.kind === 'player' ? p.label : (p.kind === 'total' ? 'Game total' : 'Team points');
       const recent = p.last && p.last.length ? `Last ${p.last.length}: ${p.last.join(', ')}` : '';
       const hr = p.kind === 'player' ? A.props.hitRate(p.pid, p.key, p.line, g) : null;
+      const ch = A.odds.prop(pick ? Object.assign({}, p, { line: pick.line }) : p, g);
       return `<div class="prop ${pick ? 'picked' : ''}">
         <div class="pwho"><div>${who}</div><div class="dim sm">${lab}${recent ? ' / ' + recent : ''}${hr ? ` / over in ${hr.over} of last ${hr.n}` : ''}</div></div>
         <div class="pline"><input type="number" step="0.5" class="ln" value="${pick ? pick.line : p.line}" data-pid="${esc(p.id)}" ${pick ? 'disabled' : ''}></div>
         <div class="pbtns">
-          <button class="pb ${side === 'over' ? 'on' : ''}" data-act="pick" data-id="${esc(p.id)}" data-g="${g.id}" data-side="over">Over</button>
-          <button class="pb ${side === 'under' ? 'on' : ''}" data-act="pick" data-id="${esc(p.id)}" data-g="${g.id}" data-side="under">Under</button>
+          <button class="pb ${side === 'over' ? 'on' : ''}" data-act="pick" data-id="${esc(p.id)}" data-g="${g.id}" data-side="over">Over <i>${A.pct0(ch.over)}</i></button>
+          <button class="pb ${side === 'under' ? 'on' : ''}" data-act="pick" data-id="${esc(p.id)}" data-g="${g.id}" data-side="under">Under <i>${A.pct0(ch.under)}</i></button>
         </div></div>`;
     };
     const block = (tid) => `<h4>${UI.tlink(tid, 'nick')}</h4>` + props.filter(p => p.tid === tid && p.kind !== 'total').map(line).join('');
-    return UI.card('Over / Under picks', `<div class="note">Just for fun: no money, no coins. Pick over or under on each line and the app grades you after the game. Lines come from each player's recent games.</div>` +
+    return UI.card('Over / Under picks', `<div class="note">Just for fun: no money, no coins. Pick over or under on each line and the app grades you after the game. Lines come from each player's recent games. The % on each button is the chance it hits, based on past games.</div>` +
       props.filter(p => p.kind === 'total').map(line).join('') + `<div class="cols2">${[g.away, g.home].map(t => `<div>${block(t)}</div>`).join('')}</div>`, 'picks');
   };
   UI.acts.pick = el => {
@@ -88,7 +99,7 @@
     let h = `<a class="back" href="#/schedule?week=${g.week}">Back to ${UI.when(g)}</a>` + head + `<div class="row">${actions}</div>`;
 
     if (!g.played) {
-      h += UI.notesCard(g) + UI.propsPanel(g);
+      h += UI.oddsCard(g) + UI.notesCard(g) + UI.propsPanel(g);
       // roster peek
       return h;
     }
@@ -101,6 +112,9 @@
       ${[A_, H_].map((t, i) => { const s = i ? 'home' : 'away'; return `<tr><td>${UI.tlink(t, 'nick')}</td>${[0, 1, 2, 3].map(j => `<td class="num">${n0(g.q[s][j])}</td>`).join('')}${ot ? `<td class="num">${n0(g.q[s][4])}</td>` : ''}<td class="num"><b>${i ? g.hs : g.as}</b></td></tr>`; }).join('')}</tbody></table></div>` +
       (g.firstScore ? `<div class="note">${A.tNick(g[g.firstScore])} scored first.</div>` : ''));
 
+    { const o = A.odds.game(g), w = A.winnerOf(g); const pW = w ? (w === g.home ? o.pHome : o.pAway) : null;
+      if (pW != null && pW < .38) h += `<div class="upset">UPSET: the ${esc(A.tNick(w))} won with only a ${A.pct0(pW)} chance before kickoff</div>`;
+      h += UI.oddsCard(g); }
     // team stats
     const L = { [A_]: A.teamLine(g, A_), [H_]: A.teamLine(g, H_) };
     const cmp = (label, f) => `<tr><td class="num">${f(L[A_], L[H_])}</td><td class="mid">${label}</td><td class="num">${f(L[H_], L[A_])}</td></tr>`;

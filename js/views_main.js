@@ -14,14 +14,17 @@
   }
   UI.headline = headline;
 
+  function oddsLine(g) { const o = A.odds.game(g); return ` / ${A.tNick(o.fav)} ${A.pct0(o.favP)} to win`; }
+  UI.oddsLine = oddsLine;
+
   function gameCard(g) {
     const tag = g.type === 'playoff' ? `<span class="tagp">${g.round === 'FINAL' ? A.LEAGUE.champGame : A.LEAGUE.roundNames[g.week]}</span>` : (g.kind === 'div' ? '<span class="tagp dv">Division</span>' : g.kind === 'cross' ? '<span class="tagp x">Aisle vs Drive-Thru</span>' : '');
     const w = g.played ? A.winnerOf(g) : null;
-    const row = (tid, score, isHome) => `<div class="gt ${w && w !== tid ? 'lose' : ''}"><span class="gname">${UI.badge(tid)}<a href="#/team/${tid}">${esc(A.tName(tid))}</a>${g.seeds && g.seeds[isHome ? 'home' : 'away'] ? `<i class="seed">${g.seeds[isHome ? 'home' : 'away']}</i>` : ''}</span><b class="gs">${g.played ? score : ''}</b></div>`;
+    const row = (tid, score, isHome) => `<div class="gt ${w && w !== tid ? 'lose' : ''}"><span class="gname">${UI.logo(tid, 28)}<a href="#/team/${tid}">${esc(A.tName(tid))}</a>${g.seeds && g.seeds[isHome ? 'home' : 'away'] ? `<i class="seed">${g.seeds[isHome ? 'home' : 'away']}</i>` : ''}</span><b class="gs">${g.played ? score : ''}</b></div>`;
     return `<div class="gcard ${g.played ? 'done' : ''}">
       <div class="gtop">${tag}<span class="dim">${g.type === 'playoff' ? (g.ot ? 'OT' : '') : UI.when(g) + (g.ot ? ' / OT' : '')}</span></div>
       ${row(g.away, g.as, false)}${row(g.home, g.hs, true)}
-      <div class="gfoot">${g.played ? `<a class="btn sm" href="#/game/${g.id}">Box score</a>` : `<span class="dim sm">${esc(headline(g))}</span><a class="btn sm gold" href="#/game/${g.id}">Preview</a><a class="btn sm" href="#/record/${g.id}">Record</a>`}</div>
+      <div class="gfoot">${g.played ? `<a class="btn sm" href="#/game/${g.id}">Box score</a>` : `<span class="dim sm">${esc(headline(g))}${oddsLine(g)}</span><a class="btn sm gold" href="#/game/${g.id}">Preview</a><a class="btn sm" href="#/record/${g.id}">Record</a>`}</div>
     </div>`;
   }
   UI.gameCard = gameCard;
