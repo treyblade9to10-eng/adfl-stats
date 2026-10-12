@@ -44,9 +44,12 @@
     return out;
   };
 
+  A.OLD_NAMES = { first: new Set(FIRST), last: new Set(LAST) };   // v1.0 pools, used to spot old auto-names when upgrading
+
   A.makeAllRosters = function (seed) {
     let n = 1; const all = [];
     A.TEAMS.forEach(t => { const ros = A.makeRoster(t.id, n, seed); n += ros.length; all.push(...ros); });
+    const names = A.uniqueNames(all, seed); all.forEach(p => p.name = names[p.id]);
     return { players: all, nextId: n };
   };
 })(globalThis);

@@ -1,6 +1,6 @@
 // loads the engine in node with a fake localStorage, plus a random game filler
 const mem = {}; globalThis.localStorage = { getItem: k => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } };
-for (const f of ['league', 'schedule', 'rosters', 'logos', 'stats', 'store', 'facts', 'props', 'awards', 'odds']) require('../js/' + f + '.js');
+for (const f of ['league', 'schedule', 'names', 'rosters', 'logos', 'stats', 'store', 'facts', 'props', 'awards', 'odds']) require('../js/' + f + '.js');
 const A = globalThis.ADFL;
 let seed = 5; const r = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const ri = (a, b) => a + Math.floor(r() * (b - a + 1));

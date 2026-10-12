@@ -1,8 +1,8 @@
 // Offline support: network first so updates show right away, saved copy when there's no signal.
-const CACHE = 'adfl-v1.1';
+const CACHE = 'adfl-v1.2';
 const FILES = ['./', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'fonts/barlow-500.woff2', 'fonts/barlow-700.woff2', 'fonts/bc-600.woff2', 'fonts/bc-800.woff2', 'fonts/bc-800i.woff2', 'fonts/bc-900i.woff2',
-  'js/league.js', 'js/schedule.js', 'js/rosters.js', 'js/stats.js', 'js/store.js', 'js/facts.js', 'js/props.js', 'js/awards.js', 'js/odds.js', 'js/logos.js', 'icons/logo.svg', 'js/ui_core.js',
+  'js/league.js', 'js/schedule.js', 'js/names.js', 'js/rosters.js', 'js/stats.js', 'js/store.js', 'js/facts.js', 'js/props.js', 'js/awards.js', 'js/odds.js', 'js/logos.js', 'icons/logo.svg', 'js/ui_core.js',
   'js/views_main.js', 'js/views_game.js', 'js/views_record.js', 'js/views_teams.js', 'js/views_players.js', 'js/views_misc.js', 'js/main.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

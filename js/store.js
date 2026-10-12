@@ -8,11 +8,24 @@
 
   function fresh() {
     const r = A.makeAllRosters(1);
-    const st = { v: 1, seasonNow: 1, players: {}, nextPid: r.nextId, games: [], picks: [], awards: [], drafts: {}, nextId: 1, created: Date.now() };
+    const st = { names2: true, v: 1, seasonNow: 1, players: {}, nextPid: r.nextId, games: [], picks: [], awards: [], drafts: {}, nextId: 1, created: Date.now() };
     r.players.forEach(p => st.players[p.id] = p);
     S = st;
     addSeasonGames(1);
     return st;
+  }
+
+  // v1.2: new, less repetitive player names. Only renames players still wearing an old auto-made name (your own edits stay).
+  function renamePlayers(st) {
+    if (st.names2) return;
+    const ps = Object.values(st.players).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+    const fresh = A.uniqueNames(ps, 1);
+    ps.forEach(p => {
+      const parts = String(p.name).split(' ');
+      if (parts.length === 2 && A.OLD_NAMES.first.has(parts[0]) && A.OLD_NAMES.last.has(parts[1])) p.name = fresh[p.id];
+    });
+    st.names2 = true;
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { }
   }
 
   // v1.1: Chick-fil-A left the league, Wingstop took its spot. Everything recorded under CFA moves to WNG.
@@ -41,7 +54,7 @@
   A.store = {
     get state() { return S; },
     load() {
-      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(S); return S; } } catch (e) { console.warn('load failed', e); }
+      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(S); renamePlayers(S); return S; } } catch (e) { console.warn('load failed', e); }
       fresh(); this.save(); return S;
     },
     save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Could not save (storage full?). Export a backup from Settings.'); } },
