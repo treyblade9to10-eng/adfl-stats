@@ -1,5 +1,5 @@
 // Offline support: network first so updates show right away, saved copy when there's no signal.
-const CACHE = 'adfl-v1.4';
+const CACHE = 'adfl-v1.5';
 const FILES = ['./', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'fonts/barlow-500.woff2', 'fonts/barlow-700.woff2', 'fonts/bc-600.woff2', 'fonts/bc-800.woff2', 'fonts/bc-800i.woff2', 'fonts/bc-900i.woff2',
   'js/league.js', 'js/schedule.js', 'js/names.js', 'js/rosters.js', 'js/stats.js', 'js/store.js', 'js/facts.js', 'js/props.js', 'js/awards.js', 'js/odds.js', 'js/logos.js', 'icons/logo.svg', 'js/ui_core.js',

@@ -8,7 +8,7 @@
 
   function fresh() {
     const r = A.makeAllRosters(1);
-    const st = { names2: true, v: 1, seasonNow: 1, players: {}, nextPid: r.nextId, games: [], picks: [], awards: [], drafts: {}, nextId: 1, created: Date.now() };
+    const st = { names2: true, numbers2: true, v: 1, seasonNow: 1, players: {}, nextPid: r.nextId, games: [], picks: [], awards: [], drafts: {}, nextId: 1, created: Date.now() };
     r.players.forEach(p => st.players[p.id] = p);
     S = st;
     addSeasonGames(1);
@@ -16,8 +16,25 @@
   }
 
   // v1.2: new, less repetitive player names. Only renames players still wearing an old auto-made name (your own edits stay).
+  // v1.5: receivers all wore 80-89. Give WRs realistic numbers (mostly 1-19). Same result on every device.
+  function upgrade(st) { const a = migrate(st), b = renamePlayers(st), c = renumberWRs(st); return a || b || c; }
+
+  function renumberWRs(st) {
+    if (st.numbers2) return false;
+    A.TEAMS.forEach(t => {
+      const ros = Object.values(st.players).filter(p => p.team === t.id);
+      const wrs = ros.filter(p => p.pos === 'WR').sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+      const used = new Set(ros.filter(p => p.pos !== 'WR').map(p => p.num));
+      const r = A.rng(t.id.split('').reduce((s, c) => s * 31 + c.charCodeAt(0), 11) + 777);
+      let has80 = false;
+      wrs.forEach(p => { p.num = A.pickNumber(has80 ? 'WR_LOW' : 'WR', used, r); if (p.num >= 80) has80 = true; used.add(p.num); });
+    });
+    st.numbers2 = true;
+    return true;
+  }
+
   function renamePlayers(st) {
-    if (st.names2) return;
+    if (st.names2) return false;
     const ps = Object.values(st.players).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
     const fresh = A.uniqueNames(ps, 1);
     ps.forEach(p => {
@@ -25,12 +42,13 @@
       if (parts.length === 2 && A.OLD_NAMES.first.has(parts[0]) && A.OLD_NAMES.last.has(parts[1])) p.name = fresh[p.id];
     });
     st.names2 = true;
+    return true;
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { }
   }
 
   // v1.1: Chick-fil-A left the league, Wingstop took its spot. Everything recorded under CFA moves to WNG.
   function migrate(st) {
-    if (!JSON.stringify(st).includes('"CFA"') && !JSON.stringify(st).includes(':CFA:')) return;
+    if (!JSON.stringify(st).includes('"CFA"') && !JSON.stringify(st).includes(':CFA:')) return false;
     const fix = v => v === 'CFA' ? 'WNG' : v;
     Object.values(st.players).forEach(p => p.team = fix(p.team));
     st.games.forEach(g => {
@@ -42,6 +60,7 @@
     Object.values(st.drafts || {}).forEach(d => Object.values(d.box || {}).forEach(ln => ln.t = fix(ln.t)));
     Object.values(st.drafts || {}).forEach(d => { if (d.rows) Object.keys(d.rows).forEach(k => { if (k.startsWith('CFA:')) { d.rows['WNG:' + k.slice(4)] = d.rows[k]; delete d.rows[k]; } }); });
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { }
+    return true;
   }
 
   function addSeasonGames(season) {
@@ -54,7 +73,7 @@
   A.store = {
     get state() { return S; },
     load() {
-      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(S); renamePlayers(S); return S; } } catch (e) { console.warn('load failed', e); }
+      try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); if (upgrade(S)) try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } return S; } } catch (e) { console.warn('load failed', e); }
       fresh(); this.save(); return S;
     },
     save() {
@@ -68,7 +87,9 @@
     // A newer league arrived from the cloud. Keep this device's unfinished drafts.
     replaceShared(data) {
       data.drafts = (S && S.drafts) || {};
-      S = data; migrate(S); renamePlayers(S);
+      S = data;
+      // an editor device fixes up old cloud data once and sends it back up
+      if (upgrade(S) && A.sync) setTimeout(() => A.sync.changed(), 0);
       try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { }
     },
     snapshotPrev() { try { localStorage.setItem(PREV, JSON.stringify(S)); } catch (e) { } },

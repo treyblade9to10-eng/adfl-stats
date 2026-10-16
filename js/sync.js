@@ -22,7 +22,7 @@
 
   // Editors: the owner, anyone the owner added, or anyone who unlocked this device with the editor code.
   // A brand-new league can be claimed only by a Google account (not by a code-only device).
-  const canEdit = () => !!(st.user && (st.owner === st.user.uid || st.editors[st.user.uid] || st.keyOK || (!st.owner && !st.user.isAnonymous)));
+  const canEdit = () => !!(st.user && (st.owner === st.user.uid || st.editors[st.user.uid] || st.keyOK || (!st.owner && st.ownerLoaded && !st.user.isAnonymous)));
   let keyRef = null;
   function watchKey(u) {
     if (keyRef) { keyRef.off(); keyRef = null; }
@@ -54,7 +54,7 @@
         db = firebase.database();
         st.ready = true;
         db.ref('.info/connected').on('value', s => { st.online = !!s.val(); paint(); });
-        db.ref('adfl/owner').on('value', s => { st.owner = s.val(); paint(); maybeFirstUpload(); });
+        db.ref('adfl/owner').on('value', s => { st.owner = s.val(); st.ownerLoaded = true; paint(); maybeFirstUpload(); A.sync.changed(); });
         db.ref('adfl/editors').on('value', s => { st.editors = s.val() || {}; paint(); });
         db.ref('adfl/league').on('value', s => onRemote(s.val()), e => { st.error = e.message; paint(); });
         firebase.auth().onAuthStateChanged(u => { st.user = u; watchKey(u); paint(); maybeFirstUpload(); if (u) A.sync.changed(); });
@@ -138,7 +138,11 @@
     st.lastRemoteData = v;
     if (!v) { paint(); maybeFirstUpload(); return; }
     const m = meta();
-    if (v.rev === m.baseRev) { st.lastPushed = st.lastPushed || v.data; paint(); return; }   // already have this one
+    if (v.rev === m.baseRev) {   // already have this one
+      st.lastPushed = st.lastPushed || v.data;
+      if (canEdit() && sharedJSON(A.store.state) !== v.data) { st.lastPushed = v.data; A.sync.changed(); }   // this device fixed something up (like the new numbers): send it
+      paint(); return;
+    }
     // our own save coming back to us (can arrive before the save finishes): just remember its number
     if (v.data === st.pendingJS || v.data === sharedJSON(A.store.state)) { st.lastPushed = v.data; setMeta({ baseRev: v.rev, dirty: false }); paint(); return; }
     if (m.dirty && canEdit()) { conflictPrompt(); return; }

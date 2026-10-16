@@ -3,12 +3,35 @@
   const A = G.ADFL;
 
   A.POSITIONS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K', 'P'];
-  // how many of each position, and the jersey number range for them
-  A.ROSTER_SLOTS = [
-    ['QB', 2, [1, 19]], ['RB', 2, [20, 39]], ['WR', 4, [80, 89]], ['TE', 1, [80, 89]],
-    ['OL', 3, [60, 79]], ['DL', 3, [90, 99]], ['LB', 3, [40, 59]], ['CB', 2, [20, 39]], ['S', 2, [20, 39]],
-    ['K', 1, [1, 19]], ['P', 1, [1, 19]],
-  ];
+  // how many of each position
+  A.ROSTER_SLOTS = [['QB', 2], ['RB', 2], ['WR', 4], ['TE', 1], ['OL', 3], ['DL', 3], ['LB', 3], ['CB', 2], ['S', 2], ['K', 1], ['P', 1]];
+
+  // Jersey numbers like today's NFL: [low, high, how likely]. WRs mostly wear 1-19, some still in the 80s.
+  A.NUMBER_RANGES = {
+    QB: [[1, 19, 1]], K: [[1, 19, 1]], P: [[1, 19, 1]],
+    WR: [[1, 19, .7], [80, 89, .3]],
+    WR_LOW: [[1, 19, 1]],            // a team only gets one receiver in the 80s
+    RB: [[20, 39, .75], [1, 9, .25]],
+    TE: [[80, 89, .75], [40, 49, .25]],
+    OL: [[60, 79, .8], [50, 59, .2]],
+    DL: [[90, 99, .6], [50, 59, .2], [70, 79, .2]],
+    LB: [[40, 59, .8], [1, 9, .2]],
+    CB: [[20, 39, .8], [1, 9, .2]],
+    S: [[20, 49, .85], [1, 9, .15]],
+  };
+  // Pick a number for a position that nobody on the team is wearing yet.
+  A.pickNumber = function (pos, used, r) {
+    const ranges = A.NUMBER_RANGES[pos] || [[1, 99, 1]];
+    for (let t = 0; t < 60; t++) {
+      let x = r(), rg = ranges[ranges.length - 1];
+      for (const g of ranges) { if (x < g[2]) { rg = g; break; } x -= g[2]; }
+      const n = rg[0] + Math.floor(r() * (rg[1] - rg[0] + 1));
+      if (!used.has(n)) return n;
+    }
+    for (const g of ranges) for (let n = g[0]; n <= g[1]; n++) if (!used.has(n)) return n;   // everything taken: first free one
+    for (let n = 0; n < 100; n++) if (!used.has(n)) return n;
+    return 0;
+  };
 
   const FIRST = ['Marcus', 'Devon', 'Jaylen', 'Tyrese', 'Caleb', 'Mason', 'Eli', 'Rashad', 'Bryce', 'Dante', 'Corey', 'Malik', 'Trevor', 'Grant', 'Nolan', 'Jamal', 'Cade', 'Darius', 'Hunter', 'Terrell',
     'Brandon', 'Xavier', 'Colt', 'Reggie', 'Ty', 'Landon', 'Omar', 'Wes', 'Kendrick', 'Austin', 'Micah', 'Dominic', 'Jace', 'Rico', 'Beau', 'Silas', 'Troy', 'Andre', 'Zeke', 'Lamar',
@@ -30,13 +53,13 @@
   A.makeRoster = function (teamId, nextId, seasonSeed) {
     const r = A.rng((seasonSeed || 1) * 1000 + teamId.split('').reduce((s, c) => s * 31 + c.charCodeAt(0), 7));
     const used = new Set(), names = new Set(), numsUsed = new Set(), out = [];
-    for (const [pos, count, [lo, hi]] of A.ROSTER_SLOTS) {
+    for (const [pos, count] of A.ROSTER_SLOTS) {
       for (let d = 0; d < count; d++) {
         let name, tries = 0;
         do { name = FIRST[Math.floor(r() * FIRST.length)] + ' ' + LAST[Math.floor(r() * LAST.length)]; } while (names.has(name) && ++tries < 50);
         names.add(name);
-        let num, nt = 0;
-        do { num = lo + Math.floor(r() * (hi - lo + 1)); } while (numsUsed.has(num) && ++nt < 80);
+        const wr80 = pos === 'WR' && out.some(p => p.pos === 'WR' && p.num >= 80);
+        const num = A.pickNumber(wr80 ? 'WR_LOW' : pos, numsUsed, r);
         numsUsed.add(num);
         out.push({ id: 'p' + (nextId + out.length), name, num, pos, team: teamId, ovr: rating(r, d, pos), rookie: r() < .14, depth: d });
       }
