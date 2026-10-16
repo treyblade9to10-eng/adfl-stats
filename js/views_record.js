@@ -97,7 +97,9 @@
   UI.views.record = function ([id]) {
     const g = ST().game(id); if (!g) return UI.empty('Game not found.');
     if (g.played && ST().lockedByPlayoffs(g)) return `<a class="back" href="#/game/${id}">Back</a>` + UI.card('Locked', '<p>The next playoff round was already built from this result. Reset the later round first if you really need to change this.</p>');
-    if (!cur || cur.g.id !== id) { cur = { g, d: ST().draftFor(g) }; activeTab = 'away'; }
+    const switching = !cur || cur.g.id !== id;
+    if (switching || UI.fromRoute !== UI.curRoute) { cur = { g, d: ST().draftFor(g) }; if (switching) activeTab = 'away'; }
+    if (A.sync && A.sync.viewOnly()) return UI.card('View only', '<p>Only the league owner can record games. Sign in from Settings if that is you.</p>');
     if (!cur.d.rows) cur.d.rows = {};
     const d = cur.d;
     // make sure box lines know their team
@@ -105,6 +107,7 @@
     const qrow = (side, tid) => `<tr><td>${UI.tlink(tid, 'nick')}</td>${[0, 1, 2, 3, 4].map(i => `<td class="num"><input type="number" min="0" inputmode="numeric" data-input="rec" data-path="q.${side}.${i}" value="${q(side, i)}"></td>`).join('')}<td class="num"><b id="tot${side === 'away' ? 'Away' : 'Home'}">0</b></td></tr>`;
     const all = ST().roster(g.home).concat(ST().roster(g.away));
     let h = `<a class="back" href="#/game/${g.id}">Back to game</a>` + UI.title(`${A.tName(g.away)} at ${A.tName(g.home)}`, `${UI.when(g)} / Season ${g.season}${g.played ? ' / editing a saved game' : ''}`);
+    if (d.plays && d.plays.length) h += `<div class="qtban">These numbers were built from <b>${d.plays.length} Quick Tap plays</b>. Fix anything here, add time of possession, then save. <a class="btn sm" href="#/live/${g.id}">Back to Quick Tap</a></div>`;
     h += UI.card('Score', `<div class="tw"><table class="bs form qt"><thead><tr><th></th><th class="num">Q1</th><th class="num">Q2</th><th class="num">Q3</th><th class="num">Q4</th><th class="num">OT</th><th class="num">FINAL</th></tr></thead><tbody>${qrow('away', g.away)}${qrow('home', g.home)}</tbody></table></div>
       <div class="row wrapr"><label class="inl">Who scored first?
         <select data-change="recField" data-path="firstScore"><option value="">Not sure</option><option value="away" ${d.firstScore === 'away' ? 'selected' : ''}>${esc(A.tNick(g.away))}</option><option value="home" ${d.firstScore === 'home' ? 'selected' : ''}>${esc(A.tNick(g.home))}</option></select></label></div>`);
@@ -151,6 +154,7 @@
     if (!anyScore) return UI.toast('Put in the score first (quarter by quarter).');
     const go = () => {
       const g = cur.g;
+      if (cur.d.plays && cur.d.plays.length && A.pbpLines) cur.d.pbp = A.pbpLines(g, cur.d.plays);
       const res = ST().saveGame(g, cur.d);
       if (!res.ok) return UI.toast(res.error);
       cur = null; UI.fillSeasonSel(); UI.toast('Game saved');

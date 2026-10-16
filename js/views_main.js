@@ -24,7 +24,7 @@
     return `<div class="gcard ${g.played ? 'done' : ''}">
       <div class="gtop">${tag}<span class="dim">${g.type === 'playoff' ? (g.ot ? 'OT' : '') : UI.when(g) + (g.ot ? ' / OT' : '')}</span></div>
       ${row(g.away, g.as, false)}${row(g.home, g.hs, true)}
-      <div class="gfoot">${g.played ? `<a class="btn sm" href="#/game/${g.id}">Box score</a>` : `<span class="dim sm">${esc(headline(g))}${oddsLine(g)}</span><a class="btn sm gold" href="#/game/${g.id}">Preview</a><a class="btn sm" href="#/record/${g.id}">Record</a>`}</div>
+      <div class="gfoot">${g.played ? `<a class="btn sm" href="#/game/${g.id}">Box score</a>` : `<span class="dim sm">${esc(headline(g))}${oddsLine(g)}</span><a class="btn sm gold" href="#/game/${g.id}">Preview</a><a class="btn sm" href="#/live/${g.id}">Record</a>`}</div>
     </div>`;
   }
   UI.gameCard = gameCard;

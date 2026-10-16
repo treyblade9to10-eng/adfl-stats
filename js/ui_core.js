@@ -100,6 +100,7 @@
   UI.render = function () {
     const r = UI.parse();
     const view = UI.views[r.name] || UI.views.home;
+    UI.fromRoute = UI.curRoute; UI.curRoute = r.name + '/' + r.args.join('/');
     const main = document.getElementById('main');
     let html;
     try { html = view(r.args, r.q); } catch (e) { console.error(e); html = `<div class="card"><h3>Something broke on this page</h3><p class="dim">${esc(e.message)}</p></div>`; }
@@ -129,6 +130,7 @@
     window.addEventListener('hashchange', () => { UI.closeModal(); UI.render(); });
     UI.acts.closeModal = () => UI.closeModal();
     UI.render();
+    if (A.sync) A.sync.start();
   };
   UI.fillSeasonSel = function () {
     const sel = document.getElementById('seasonSel');

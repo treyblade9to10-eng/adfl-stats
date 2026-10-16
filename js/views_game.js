@@ -95,7 +95,7 @@
     </div>`;
     const actions = g.played
       ? `<a class="btn gold" href="#/record/${g.id}">Edit stats</a><button data-act="unplay" data-g="${g.id}">Reset game</button>`
-      : `<a class="btn gold" href="#/record/${g.id}">Record this game</a>`;
+      : `<a class="btn gold" href="#/live/${g.id}">Quick Tap (play by play)</a><a class="btn" href="#/record/${g.id}">Type in the box score</a>`;
     let h = `<a class="back" href="#/schedule?week=${g.week}">Back to ${UI.when(g)}</a>` + head + `<div class="row">${actions}</div>`;
 
     if (!g.played) {
@@ -130,6 +130,7 @@
       const tabs = A.GROUPS.map(grp => groupTable(g, tid, grp, ag)).join('');
       h += UI.card(`${UI.tlink(tid)} player stats`, tabs || UI.empty('No player stats saved for this team.'));
     });
+    if (g.pbp && g.pbp.length) h += UI.card('Play by play', `<ol class="pbp full">${g.pbp.map(x => { const [q, t, txt] = x.split('|'); return `<li><span class="lq">${q}</span>${t ? UI.logo(t, 16) : ''} ${esc(txt)}</li>`; }).join('')}</ol>`);
     if (g.notes) h += UI.card('Notes', `<p>${esc(g.notes)}</p>`);
     const picks = ST().state.picks.filter(p => p.gameId === g.id);
     if (picks.length) h += UI.card('Your picks this game', picks.map(p => `<div class="lrow"><span>${p.kind === 'player' ? esc(ST().pName(p.pid)) : ''} ${esc(p.label)} ${p.side} ${p.line}</span><b class="res ${p.result}">${p.result || '...'} <span class="dim">(${p.actual == null ? '' : p.actual})</span></b></div>`).join(''));

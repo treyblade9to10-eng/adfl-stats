@@ -14,11 +14,14 @@
 <body>
 <header id="top">
   <a class="logo" href="#/home"><span id="appLogo"></span>ADFL<small>STAT BOOK</small></a>
-  <select id="seasonSel" aria-label="Season"></select>
+  <span class="hr"><a id="syncPill" class="syncpill off" href="#/settings">Local only</a><select id="seasonSel" aria-label="Season"></select></span>
 </header>
 <nav id="nav"></nav>
 <main id="main"></main>
-<footer>Aisle &amp; Drive-Thru Football League <span class="ver">v1.2</span></footer>
+<footer>Aisle &amp; Drive-Thru Football League <span class="ver">v1.3</span></footer>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="js/league.js"></script>
 <script src="js/schedule.js"></script>
 <script src="js/names.js"></script>
@@ -30,10 +33,12 @@
 <script src="js/props.js"></script>
 <script src="js/awards.js"></script>
 <script src="js/odds.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/ui_core.js"></script>
 <script src="js/views_main.js"></script>
 <script src="js/views_game.js"></script>
 <script src="js/views_record.js"></script>
+<script src="js/views_live.js"></script>
 <script src="js/views_teams.js"></script>
 <script src="js/views_players.js"></script>
 <script src="js/views_misc.js"></script>

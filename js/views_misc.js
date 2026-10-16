@@ -178,6 +178,7 @@
     const played_ = S.games.filter(g => g.played).length;
     const champ = ST().champion(ST().state.seasonNow);
     let h = UI.title('Settings', `${A.LEAGUE.full}`);
+    h += syncCard();
     h += UI.card('Your data', `<p>Everything is saved in this browser on this device: ${played_} games, ${Object.keys(S.players).length} players, ${S.picks.length} picks, ${S.awards.length} awards.</p>
       <p class="dim">If you clear your browser data or switch phones, it's gone, so download a backup now and then. The file can be loaded back in here.</p>
       <div class="row wrapr"><button class="gold" data-act="exportData">Download backup</button><label class="btn">Load a backup<input type="file" accept=".json,application/json" data-change="importData" hidden></label>${ST().hasPrev() ? '<button data-act="undoLast">Undo last change</button>' : ''}</div>`);
@@ -187,6 +188,41 @@
     h += UI.card('Danger zone', `<p class="dim">This wipes every game, stat and award and brings back fresh rosters.</p><div class="row"><button class="red" data-act="resetAll">Erase everything</button></div>`);
     return h;
   };
+  // ---------- Cloud sync card ----------
+  const RULES = `{
+  "rules": {
+    "saves": { ".read": true, ".write": true },
+    "leaderboard": { ".read": true, ".write": true },
+    "notifications": { ".read": true, ".write": true },
+    "trades": { ".read": true, ".write": true },
+    "traderooms": { ".read": true, ".write": true },
+    "tradenotifs": { ".read": true, ".write": true },
+    "bobble": { ".read": true, ".write": true },
+    "adfl": {
+      ".read": true,
+      "owner": { ".write": "auth != null && !data.exists()" },
+      "editors": { ".write": "auth != null && root.child('adfl/owner').val() === auth.uid" },
+      "league": { ".write": "auth != null && (root.child('adfl/owner').val() === auth.uid || root.child('adfl/editors').child(auth.uid).exists())" }
+    }
+  }
+}`;
+  function syncCard() {
+    if (!A.sync) return '';
+    const s = A.sync.state, stt = A.sync.status();
+    const who = s.user ? `${esc(s.user.displayName || s.user.email || 'Signed in')}` : '';
+    const role = !s.user ? '' : (s.owner === s.user.uid ? 'You are the league owner. Your changes go to every device.' : s.owner ? 'You are signed in, but you are not the league owner, so this is view only.' : 'Nobody owns the league yet. Saving anything makes you the owner.');
+    return UI.card('Cloud sync', `<p><span class="syncpill ${stt.cls}">${stt.text}</span></p>
+      <p>Everyone who opens this site sees the same league. Only the owner can record games or change things, and the owner signs in with Google.</p>
+      ${s.ready ? (s.user ? `<p>Signed in as <b>${who}</b>. ${role}</p><div class="row"><button data-act="syncOut">Sign out</button>${A.sync.canEdit() ? '<button class="gold" data-act="syncPush">Save to cloud now</button>' : ''}</div>`
+        : `<div class="row"><button class="gold" data-act="syncIn">Sign in with Google</button></div><p class="dim">Not signed in? You can still look at everything.</p>`) : '<p class="dim">The cloud could not load (no internet?). The app still works on this device, and will catch up later.</p>'}
+      <details><summary>Firebase rules (one-time setup to lock it down)</summary>
+      <p class="dim">Paste these in Firebase: Realtime Database, then the Rules tab, then Publish. Your Card.io and Bobble Bowl data stay open exactly like now; only the ADFL part gets locked so only you can change it.</p>
+      <textarea rows="12" readonly class="rules">${esc(RULES)}</textarea></details>`);
+  }
+  UI.acts.syncIn = () => A.sync.signIn();
+  UI.acts.syncOut = () => { A.sync.signOut(); setTimeout(() => UI.render(), 400); };
+  UI.acts.syncPush = async () => { await A.sync.pushNow(); UI.toast('Saved to the cloud'); UI.render(); };
+
   UI.acts.exportData = () => {
     const blob = new Blob([ST().exportJSON()], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);

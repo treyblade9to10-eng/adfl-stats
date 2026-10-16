@@ -57,7 +57,20 @@
       try { const raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); migrate(S); renamePlayers(S); return S; } } catch (e) { console.warn('load failed', e); }
       fresh(); this.save(); return S;
     },
-    save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Could not save (storage full?). Export a backup from Settings.'); } },
+    save() {
+      if (A.sync && A.sync.viewOnly() && !A.sync.state.applying) {   // looking, not allowed to change: undo the change
+        if (A.ui) A.ui.toast('View only. Sign in as the league owner in Settings to make changes.');
+        A.sync.useCloud(); return;
+      }
+      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Could not save (storage full?). Export a backup from Settings.'); }
+      if (A.sync) A.sync.changed();
+    },
+    // A newer league arrived from the cloud. Keep this device's unfinished drafts.
+    replaceShared(data) {
+      data.drafts = (S && S.drafts) || {};
+      S = data; migrate(S); renamePlayers(S);
+      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { }
+    },
     snapshotPrev() { try { localStorage.setItem(PREV, JSON.stringify(S)); } catch (e) { } },
     hasPrev() { return !!localStorage.getItem(PREV); },
     undoLast() { const raw = localStorage.getItem(PREV); if (!raw) return false; localStorage.setItem(KEY, raw); S = JSON.parse(raw); return true; },
@@ -131,7 +144,7 @@
       }
       const team = { home: {}, away: {} };
       for (const side of ['home', 'away']) for (const k in (d.team[side] || {})) { const v = d.team[side][k]; if (v !== '' && v != null) team[side][k] = k === 'top' ? A.parseTop(v) : +v; }
-      Object.assign(g, { played: true, q, hs, as, ot: !!d.ot || q.home[4] != null || q.away[4] != null, firstScore: d.firstScore || null, team, box, pog: d.pog || null, notes: d.notes || '', playedAt: Date.now() });
+      Object.assign(g, { played: true, q, hs, as, ot: !!d.ot || q.home[4] != null || q.away[4] != null, firstScore: d.firstScore || null, team, box, pog: d.pog || null, notes: d.notes || '', pbp: d.pbp || g.pbp || null, playedAt: Date.now() });
       delete S.drafts[g.id];
       if (g.type === 'reg') dropOpenPlayoffs(g.season);   // seeds may have changed: rebuild the bracket
       ensurePlayoffs(g.season);
@@ -141,7 +154,7 @@
     },
     unplay(g) {
       this.snapshotPrev();
-      ['q', 'hs', 'as', 'ot', 'firstScore', 'team', 'box', 'pog', 'notes', 'playedAt'].forEach(k => delete g[k]);
+      ['q', 'hs', 'as', 'ot', 'firstScore', 'team', 'box', 'pog', 'notes', 'pbp', 'playedAt'].forEach(k => delete g[k]);
       g.played = false;
       if (g.type === 'reg') dropOpenPlayoffs(g.season);
       S.picks.forEach(p => { if (p.gameId === g.id) { p.result = null; p.actual = null; } });
