@@ -285,7 +285,7 @@
 
   UI.views.live = function ([id]) {
     const g = ST().game(id); if (!g) return UI.empty('Game not found.');
-    if (A.sync && A.sync.viewOnly()) return UI.card('View only', '<p>Only the league owner can record games. Sign in from Settings if that is you.</p>');
+    if (A.sync && A.sync.viewOnly()) return UI.card('View only', '<p>Only league editors can record games. Enter the editor code in <a href="#/settings">Settings</a> (or sign in if you own the league).</p>');
     if (g.played && ST().lockedByPlayoffs(g)) return UI.card('Locked', '<p>The next playoff round was already built from this game.</p>');
     if (!cur || cur.g.id !== id || UI.fromRoute !== UI.curRoute) { cur = { g, d: ST().draftFor(g), started: cur && cur.g.id === id && cur.started }; step = null; UI._lvMore = false; }
     init(g, cur.d);

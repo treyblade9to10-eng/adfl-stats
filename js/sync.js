@@ -10,7 +10,7 @@
   };
   const META = 'adfl-sync-meta';
   const st = {
-    ready: false, online: false, user: null, owner: null, editors: {}, remote: null, // remote = { rev, at, by } (data not kept here)
+    ready: false, online: false, user: null, owner: null, editors: {}, keyOK: false, remote: null, // remote = { rev, at, by } (data not kept here)
     lastPushed: null, pushing: false, error: null, applying: false,
   };
   let db = null, pushT = null;
@@ -20,7 +20,17 @@
   // The part of the league that gets shared (everything except half-done drafts).
   function sharedJSON(S) { const o = Object.assign({}, S); delete o.drafts; return JSON.stringify(o); }
 
-  const canEdit = () => !!(st.user && (st.owner === st.user.uid || st.editors[st.user.uid] || (!st.owner && st.user)));
+  // Editors: the owner, anyone the owner added, or anyone who unlocked this device with the editor code.
+  // A brand-new league can be claimed only by a Google account (not by a code-only device).
+  const canEdit = () => !!(st.user && (st.owner === st.user.uid || st.editors[st.user.uid] || st.keyOK || (!st.owner && !st.user.isAnonymous)));
+  let keyRef = null;
+  function watchKey(u) {
+    if (keyRef) { keyRef.off(); keyRef = null; }
+    st.keyOK = false;
+    if (!u || !db) return;
+    keyRef = db.ref('adflkeys/' + u.uid);
+    keyRef.on('value', s => { st.keyOK = s.val() != null; paint(); if (st.keyOK) A.sync.changed(); if (A.ui && /^#\/settings/.test(location.hash)) A.ui.render(); }, () => { st.keyOK = false; });
+  }
   const cloudHasLeague = () => !!(st.remote && st.remote.rev);
 
   A.sync = {
@@ -47,7 +57,7 @@
         db.ref('adfl/owner').on('value', s => { st.owner = s.val(); paint(); maybeFirstUpload(); });
         db.ref('adfl/editors').on('value', s => { st.editors = s.val() || {}; paint(); });
         db.ref('adfl/league').on('value', s => onRemote(s.val()), e => { st.error = e.message; paint(); });
-        firebase.auth().onAuthStateChanged(u => { st.user = u; paint(); maybeFirstUpload(); if (u) A.sync.changed(); });
+        firebase.auth().onAuthStateChanged(u => { st.user = u; watchKey(u); paint(); maybeFirstUpload(); if (u) A.sync.changed(); });
       } catch (e) { st.error = e.message; st.ready = false; }
       paint();
     },
@@ -61,6 +71,34 @@
       });
     },
     signOut() { if (st.ready) firebase.auth().signOut(); },
+
+    // Unlock editing with the league code. The app never knows the real code: Firebase's rules check it,
+    // and a wrong code is simply refused.
+    async enterCode(code) {
+      if (!st.ready) throw new Error('The cloud is not available right now (are you offline?)');
+      code = String(code || '').trim();
+      if (!code) throw new Error('Type the code first');
+      if (!st.user) {
+        try { await firebase.auth().signInAnonymously(); }
+        catch (e) {
+          if (e && e.code === 'auth/operation-not-allowed') throw new Error('Code-only sign in is turned off in Firebase. Sign in with Google first, then enter the code.');
+          throw e;
+        }
+      }
+      const u = firebase.auth().currentUser;
+      try { await db.ref('adflkeys/' + u.uid).set(code); }
+      catch (e) { if (u.isAnonymous) await firebase.auth().signOut(); throw new Error('Wrong code'); }
+      st.keyOK = true; paint(); A.sync.changed();
+      return true;
+    },
+    // Lock this device again (stops editing here).
+    async lock() {
+      const u = st.user; if (!u) return;
+      try { await db.ref('adflkeys/' + u.uid).remove(); } catch (e) { }
+      st.keyOK = false;
+      if (u.isAnonymous) await firebase.auth().signOut();
+      paint();
+    },
 
     // Called after every local save.
     changed() {

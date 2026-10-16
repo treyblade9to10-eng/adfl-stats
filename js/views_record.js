@@ -99,7 +99,7 @@
     if (g.played && ST().lockedByPlayoffs(g)) return `<a class="back" href="#/game/${id}">Back</a>` + UI.card('Locked', '<p>The next playoff round was already built from this result. Reset the later round first if you really need to change this.</p>');
     const switching = !cur || cur.g.id !== id;
     if (switching || UI.fromRoute !== UI.curRoute) { cur = { g, d: ST().draftFor(g) }; if (switching) activeTab = 'away'; }
-    if (A.sync && A.sync.viewOnly()) return UI.card('View only', '<p>Only the league owner can record games. Sign in from Settings if that is you.</p>');
+    if (A.sync && A.sync.viewOnly()) return UI.card('View only', '<p>Only league editors can record games. Enter the editor code in <a href="#/settings">Settings</a> (or sign in if you own the league).</p>');
     if (!cur.d.rows) cur.d.rows = {};
     const d = cur.d;
     // make sure box lines know their team

@@ -59,7 +59,7 @@
     },
     save() {
       if (A.sync && A.sync.viewOnly() && !A.sync.state.applying) {   // looking, not allowed to change: undo the change
-        if (A.ui) A.ui.toast('View only. Sign in as the league owner in Settings to make changes.');
+        if (A.ui) A.ui.toast('View only. Enter the editor code in Settings to make changes.');
         A.sync.useCloud(); return;
       }
       try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { alert('Could not save (storage full?). Export a backup from Settings.'); }
